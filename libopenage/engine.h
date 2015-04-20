@@ -7,8 +7,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include <SDL2/SDL.h>
-
 #include "log/log.h"
 #include "log/file_logsink.h"
 #include "audio/audio_manager.h"
@@ -18,8 +16,9 @@
 #include "coord/window.h"
 #include "handlers.h"
 #include "options.h"
-#include "job/job_manager.h"
 #include "input/input_manager.h"
+#include "job/job_manager.h"
+#include "renderer/window.h"
 #include "util/externalprofiler.h"
 #include "util/dir.h"
 #include "util/fps.h"
@@ -356,22 +355,24 @@ private:
 	std::unordered_map<int, renderer::Font *> fonts;
 
 	/**
-	 * SDL window where everything is displayed within.
+	 * The render window. Everything is drawn in here.
+	 * Also contains the context.
 	 */
-	SDL_Window *window;
+	std::unique_ptr<renderer::Window> window;
 
 	/**
-	 * SDL OpenGL context, we'll only have one,
-	 * but it would allow having multiple ones.
-	 */
-	SDL_GLContext glcontext;
-
-	/*
 	 * the engines profiler
 	 */
 	util::Profiler profiler;
 
+	/**
+	 * The font manager to provide different sized and styled fonts.
+	 */
 	std::unique_ptr<renderer::FontManager> font_manager;
+
+	/**
+	 * The engine's text renderer. To be integrated into the main renderer.
+	 */
 	std::unique_ptr<renderer::TextRenderer> text_renderer;
 };
 
