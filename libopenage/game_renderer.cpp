@@ -55,7 +55,7 @@ GameRenderer::GameRenderer(openage::Engine *e)
 	std::vector<gamedata::palette_color> player_color_lines;
 	util::read_csv_file(asset_dir.join("player_palette.docx"), player_color_lines);
 
-	GLfloat *playercolors = new GLfloat[player_color_lines.size() * 4];
+	std::unique_ptr<GLfloat[]> playercolors = std::make_unique<GLfloat[]>(player_color_lines.size() * 4);
 	for (size_t i = 0; i < player_color_lines.size(); i++) {
 		auto line = &player_color_lines[i];
 		playercolors[i*4]     = line->r / 255.0;
@@ -67,44 +67,30 @@ GameRenderer::GameRenderer(openage::Engine *e)
 	// shader initialisation
 	// read shader source codes and create shader objects for wrapping them.
 
-	char *texture_vert_code;
-	util::read_whole_file(&texture_vert_code, data_dir->join("shaders/maptexture.vert.glsl"));
-	auto plaintexture_vert = new shader::Shader(GL_VERTEX_SHADER, texture_vert_code);
-	delete[] texture_vert_code;
+	std::string texture_vert_code = util::read_whole_file(data_dir->join("shaders/maptexture.vert.glsl"));
+	shader::Shader plaintexture_vert{GL_VERTEX_SHADER, texture_vert_code.c_str()};
 
-	char *texture_frag_code;
-	util::read_whole_file(&texture_frag_code, data_dir->join("shaders/maptexture.frag.glsl"));
-	auto plaintexture_frag = new shader::Shader(GL_FRAGMENT_SHADER, texture_frag_code);
-	delete[] texture_frag_code;
+	std::string texture_frag_code = util::read_whole_file(data_dir->join("shaders/maptexture.frag.glsl"));
+	shader::Shader plaintexture_frag{GL_FRAGMENT_SHADER, texture_frag_code.c_str()};
 
-	char *teamcolor_frag_code;
-	util::read_whole_file(&teamcolor_frag_code, data_dir->join("shaders/teamcolors.frag.glsl"));
-	auto teamcolor_frag = new shader::Shader(GL_FRAGMENT_SHADER, teamcolor_frag_code);
-	delete[] teamcolor_frag_code;
+	std::string teamcolor_frag_code = util::read_whole_file(data_dir->join("shaders/teamcolors.frag.glsl"));
+	shader::Shader teamcolor_frag{GL_FRAGMENT_SHADER, teamcolor_frag_code.c_str()};
 
-	char *alphamask_vert_code;
-	util::read_whole_file(&alphamask_vert_code, data_dir->join("shaders/alphamask.vert.glsl"));
-	auto alphamask_vert = new shader::Shader(GL_VERTEX_SHADER, alphamask_vert_code);
-	delete[] alphamask_vert_code;
+	std::string alphamask_vert_code = util::read_whole_file(data_dir->join("shaders/alphamask.vert.glsl"));
+	shader::Shader alphamask_vert{GL_VERTEX_SHADER, alphamask_vert_code.c_str()};
 
-	char *alphamask_frag_code;
-	util::read_whole_file(&alphamask_frag_code, data_dir->join("shaders/alphamask.frag.glsl"));
-	auto alphamask_frag = new shader::Shader(GL_FRAGMENT_SHADER, alphamask_frag_code);
-	delete[] alphamask_frag_code;
+	std::string alphamask_frag_code = util::read_whole_file(data_dir->join("shaders/alphamask.frag.glsl"));
+	shader::Shader alphamask_frag{GL_FRAGMENT_SHADER, alphamask_frag_code.c_str()};
 
-	char *texturefont_vert_code;
-	util::read_whole_file(&texturefont_vert_code, data_dir->join("shaders/texturefont.vert.glsl"));
-	auto texturefont_vert = new shader::Shader(GL_VERTEX_SHADER, texturefont_vert_code);
-	delete[] texturefont_vert_code;
+	std::string texturefont_vert_code = util::read_whole_file(data_dir->join("shaders/texturefont.vert.glsl"));
+	shader::Shader texturefont_vert{GL_VERTEX_SHADER, texturefont_vert_code.c_str()};
 
-	char *texturefont_frag_code;
-	util::read_whole_file(&texturefont_frag_code, data_dir->join("shaders/texturefont.frag.glsl"));
-	auto texturefont_frag = new shader::Shader(GL_FRAGMENT_SHADER, texturefont_frag_code);
-	delete[] texturefont_frag_code;
+	std::string texturefont_frag_code = util::read_whole_file(data_dir->join("shaders/texturefont.frag.glsl"));
+	shader::Shader texturefont_frag{GL_FRAGMENT_SHADER, texturefont_frag_code.c_str()};
 
 
 	// create program for rendering simple textures
-	texture_shader::program = new shader::Program(plaintexture_vert, plaintexture_frag);
+	texture_shader::program = new shader::Program(&plaintexture_vert, &plaintexture_frag);
 	texture_shader::program->link();
 	texture_shader::texture = texture_shader::program->get_uniform_id("texture");
 	texture_shader::tex_coord = texture_shader::program->get_attribute_id("tex_coordinates");
@@ -115,7 +101,7 @@ GameRenderer::GameRenderer(openage::Engine *e)
 
 	// create program for tinting textures at alpha-marked pixels
 	// with team colors
-	teamcolor_shader::program = new shader::Program(plaintexture_vert, teamcolor_frag);
+	teamcolor_shader::program = new shader::Program(&plaintexture_vert, &teamcolor_frag);
 	teamcolor_shader::program->link();
 	teamcolor_shader::texture = teamcolor_shader::program->get_uniform_id("texture");
 	teamcolor_shader::tex_coord = teamcolor_shader::program->get_attribute_id("tex_coordinates");
@@ -126,13 +112,12 @@ GameRenderer::GameRenderer(openage::Engine *e)
 	glUniform1i(teamcolor_shader::texture, 0);
 	glUniform1f(teamcolor_shader::alpha_marker_var, 254.0/255.0);
 	// fill the teamcolor shader's player color table:
-	glUniform4fv(teamcolor_shader::player_color_var, 64, playercolors);
+	glUniform4fv(teamcolor_shader::player_color_var, 64, playercolors.get());
 	teamcolor_shader::program->stopusing();
-	delete[] playercolors;
 
 
 	// create program for drawing textures that are alpha-masked before
-	alphamask_shader::program = new shader::Program(alphamask_vert, alphamask_frag);
+	alphamask_shader::program = new shader::Program(&alphamask_vert, &alphamask_frag);
 	alphamask_shader::program->link();
 	alphamask_shader::base_coord = alphamask_shader::program->get_attribute_id("base_tex_coordinates");
 	alphamask_shader::mask_coord = alphamask_shader::program->get_attribute_id("mask_tex_coordinates");
@@ -144,9 +129,8 @@ GameRenderer::GameRenderer(openage::Engine *e)
 	glUniform1i(alphamask_shader::mask_texture, 1);
 	alphamask_shader::program->stopusing();
 
-
 	// Create program for texture based font rendering
-	texturefont_shader::program = new shader::Program(texturefont_vert, texturefont_frag);
+	texturefont_shader::program = new shader::Program(&texturefont_vert, &texturefont_frag);
 	texturefont_shader::program->link();
 	texturefont_shader::texture = texturefont_shader::program->get_uniform_id("texture");
 	texturefont_shader::color = texturefont_shader::program->get_uniform_id("color");
@@ -154,15 +138,6 @@ GameRenderer::GameRenderer(openage::Engine *e)
 	texturefont_shader::program->use();
 	glUniform1i(texturefont_shader::texture, 0);
 	texturefont_shader::program->stopusing();
-
-	// after linking, the shaders are no longer necessary
-	delete plaintexture_vert;
-	delete plaintexture_frag;
-	delete teamcolor_frag;
-	delete alphamask_vert;
-	delete alphamask_frag;
-	delete texturefont_vert;
-	delete texturefont_frag;
 
 	// Renderer keybinds
 	// TODO: a renderer settings struct
