@@ -3,13 +3,12 @@
 #ifndef OPENAGE_ASSETMANAGER_H_
 #define OPENAGE_ASSETMANAGER_H_
 
-#include "config.h"
-
 #include <unordered_map>
 #include <string>
 #include <memory>
 
 #include "util/dir.h"
+#include "watch/watch.h"
 
 namespace openage {
 
@@ -48,6 +47,11 @@ public:
 
 protected:
 	/**
+	 * File change monitoring and automatic reloading.
+	 */
+	std::unique_ptr<watch::WatchManager> watch_manager;
+
+	/**
 	 * Create an internal texture handle.
 	 */
 	std::shared_ptr<Texture> load_texture(const std::string &name);
@@ -72,19 +76,6 @@ private:
 	 * Map from texture filename to texture instance ptr.
 	 */
 	std::unordered_map<std::string, std::shared_ptr<Texture>> textures;
-
-#if WITH_INOTIFY
-	/**
-	 * The file descriptor pointing to the inotify instance.
-	 */
-	int inotify_fd;
-
-	/**
-	 * Map from inotify watch handle fd to texture instance ptr.
-	 * The kernel returns the handle fd when events are triggered.
-	 */
-	std::unordered_map<int, std::shared_ptr<Texture>> watch_fds;
-#endif
 };
 
 }
