@@ -8,17 +8,21 @@
 #include <epoxy/gl.h>
 #include <SDL2/SDL.h>
 
-#include "error/error.h"
-#include "log/log.h"
-
 #include "config.h"
+#include "error/error.h"
+#include "font.h"
 #include "game_main.h"
 #include "generator.h"
+#include "job/job_manager.h"
+#include "log/log.h"
 #include "texture.h"
 #include "util/color.h"
 #include "util/fps.h"
 #include "util/opengl.h"
 #include "util/strings.h"
+#include "renderer/renderer.h"
+#include "renderer/window.h"
+#include "screenshot.h"
 
 #include "renderer/text.h"
 #include "renderer/font/font.h"
@@ -91,14 +95,19 @@ Engine::Engine(util::Dir *data_dir, const char *windowtitle)
 	// register the engines input manager
 	this->register_input_action(&this->input_manager);
 
+	// create the graphical display
 	this->window = std::make_unique<renderer::Window>(windowtitle);
+	this->renderer = std::make_unique<renderer::Renderer>(this->window->get_context());
+
+	// renderer has to be notified of window size changes
+	this->register_resize_action(this->renderer.get());
 
 	// initialize job manager with cpucount-2 worker threads
 	int number_of_worker_threads = SDL_GetCPUCount() - 2;
 	if (number_of_worker_threads <= 0) {
 		number_of_worker_threads = 1;
 	}
-	this->job_manager = new job::JobManager{number_of_worker_threads};
+	this->job_manager = std::make_unique<job::JobManager>(number_of_worker_threads);
 
 	// initialize audio
 	auto devices = audio::AudioManager::get_devices();
@@ -115,7 +124,7 @@ Engine::Engine(util::Dir *data_dir, const char *windowtitle)
 		this->drawing_huds.value = !this->drawing_huds.value;
 	});
 	global_input_context.bind(input::action_t::SCREENSHOT, [this](const input::action_arg_t &) {
-		this->get_screenshot_manager().save_screenshot();
+		this->get_screenshot_manager()->save_screenshot();
 	});
 	global_input_context.bind(input::action_t::TOGGLE_DEBUG_OVERLAY, [this](const input::action_arg_t &) {
 		this->drawing_debug_overlay.value = !this->drawing_debug_overlay.value;
@@ -157,8 +166,6 @@ Engine::Engine(util::Dir *data_dir, const char *windowtitle)
 
 Engine::~Engine() {
 	this->profiler.unregister_all();
-
-	delete this->job_manager;
 }
 
 bool Engine::on_resize(coord::window new_size) {
@@ -166,9 +173,6 @@ bool Engine::on_resize(coord::window new_size) {
 
 	// update engine window size
 	this->engine_coord_data->window_size = new_size;
-
-	// tell the screenshot manager about the new size
-	this->screenshot_manager.window_size = new_size;
 
 	// update camgame window position, set it to center.
 	this->engine_coord_data->camgame_window = this->engine_coord_data->window_size / 2;
@@ -179,9 +183,6 @@ bool Engine::on_resize(coord::window new_size) {
 	// reset previous projection matrix
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-
-	// update OpenGL viewport: the renderin area
-	glViewport(0, 0, this->engine_coord_data->window_size.x, this->engine_coord_data->window_size.y);
 
 	// set orthographic projection: left, right, bottom, top, near_val, far_val
 	glOrtho(0, this->engine_coord_data->window_size.x, 0, this->engine_coord_data->window_size.y, 9001, -1);
@@ -410,15 +411,15 @@ Player *Engine::player_focus() const {
 }
 
 job::JobManager *Engine::get_job_manager() {
-	return this->job_manager;
+	return this->job_manager.get();
 }
 
 audio::AudioManager &Engine::get_audio_manager() {
 	return this->audio_manager;
 }
 
-ScreenshotManager &Engine::get_screenshot_manager() {
-	return this->screenshot_manager;
+ScreenshotManager *Engine::get_screenshot_manager() {
+	return this->screenshot_manager.get();
 }
 
 input::InputManager &Engine::get_input_manager() {

@@ -17,10 +17,9 @@
 #include "handlers.h"
 #include "options.h"
 #include "input/input_manager.h"
-#include "job/job_manager.h"
-#include "renderer/window.h"
-#include "util/externalprofiler.h"
+#include "renderer/text_renderer.h"
 #include "util/dir.h"
+#include "util/externalprofiler.h"
 #include "util/fps.h"
 #include "util/profiler.h"
 #include "screenshot.h"
@@ -39,10 +38,20 @@ class DrawHandler;
 class TickHandler;
 class ResizeHandler;
 
-class Generator;
-class GameSpec;
+class Font;
 class GameMain;
+class GameSpec;
+class Generator;
 class Player;
+class ScreenshotManager;
+
+namespace job {
+class JobManager;
+}
+namespace renderer {
+class Renderer;
+class Window;
+}
 
 struct coord_data {
 	coord::window window_size{800, 600};
@@ -212,7 +221,7 @@ public:
 	/**
 	* return this engine's screenshot manager.
 	*/
-	ScreenshotManager &get_screenshot_manager();
+	ScreenshotManager *get_screenshot_manager();
 
 	/**
 	* return this engine's keybind manager.
@@ -330,7 +339,7 @@ private:
 	/**
 	* the engine's screenshot manager.
 	*/
-	ScreenshotManager screenshot_manager;
+	std::unique_ptr<ScreenshotManager> screenshot_manager;
 
 	/**
 	 * the engine's audio manager.
@@ -340,8 +349,7 @@ private:
 	/**
 	 * the engine's job manager, for asynchronous background task queuing.
 	 */
-	job::JobManager *job_manager;
-
+	std::unique_ptr<job::JobManager> job_manager;
 
 	/**
 	 * the engine's keybind manager.
@@ -361,9 +369,9 @@ private:
 	std::unique_ptr<renderer::Window> window;
 
 	/**
-	 * the engines profiler
+	 * The renderer. Accepts all tasks to be drawn on screen.
 	 */
-	util::Profiler profiler;
+	std::unique_ptr<renderer::Renderer> renderer;
 
 	/**
 	 * The font manager to provide different sized and styled fonts.
@@ -374,6 +382,11 @@ private:
 	 * The engine's text renderer. To be integrated into the main renderer.
 	 */
 	std::unique_ptr<renderer::TextRenderer> text_renderer;
+
+	/**
+	 * the engines profiler
+	 */
+	util::Profiler profiler;
 };
 
 } // namespace openage
