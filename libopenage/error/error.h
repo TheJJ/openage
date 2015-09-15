@@ -15,24 +15,22 @@
 
 // pxd: from libopenage.error.backtrace cimport Backtrace
 namespace openage {
-namespace error {
-// forward-declaration to avoid the header include.
-class Backtrace;
-}}
 
-namespace openage {
 namespace pyinterface {
 // forward-declaration for use in the 'friend' declaration below.
 class PyException;
-}}
-
-
-namespace openage {
-namespace error {
+}
 
 /**
- * Openage base exception type; the constructor usage is analogous to
- * log::log().
+ * Contains the exception handling and backtracing subsystem.
+ */
+namespace error {
+
+class Backtrace;
+
+/**
+ * openage base exception type.
+ * the constructor usage is analogous to log::log().
  *
  * pxd:
  *
@@ -54,14 +52,14 @@ public:
 	 * @param generate_backtrace
 	 *     If true, some platform-specific code is run to collect
 	 *     traceback information (e.g.: backtrace (3))
-	 *     (default false).
+	 *     (default true).
 	 *     The performance impacts should be not too bad, as only
 	 *     program counter pointers are collected.
 	 * @param ignore_cause
 	 *     If true, a pointer to the causing exception is not
 	 *     collected and stored (default false).
 	 */
-	Error(const log::message &msg, bool generate_backtrace=false, bool store_cause=true);
+	Error(const log::message &msg, bool generate_backtrace=true, bool store_cause=true);
 
 
 	/**
@@ -139,10 +137,10 @@ private:
 std::ostream &operator <<(std::ostream &os, const Error &e);
 
 
-} // error
+} // openage::error
 
 using error::Error;
 
-} // openage::error
+} // openage
 
 #endif
