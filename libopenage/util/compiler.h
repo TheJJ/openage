@@ -3,7 +3,7 @@
 #ifndef OPENAGE_UTIL_COMPILER_H_
 #define OPENAGE_UTIL_COMPILER_H_
 
-/*
+/** @file
  * Some general-purpose utilities related to the C++ compiler and standard
  * library implementations.
  *
