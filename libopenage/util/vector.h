@@ -3,10 +3,13 @@
 #ifndef OPENAGE_UTIL_VECTOR_H_
 #define OPENAGE_UTIL_VECTOR_H_
 
-#include <iostream>
-#include <cmath>
 #include <array>
+#include <cmath>
+#include <cstring>
+#include <iostream>
 #include <type_traits>
+
+#include "../log/log.h"
 
 namespace openage {
 namespace util {
@@ -20,13 +23,19 @@ public:
 	static_assert(N > 0, "0-dimensional vector not allowed");
 
 	/**
-	 * Default constructor
+	 * Default comparison epsilon.
 	 */
-	Vector() = default;
+	static constexpr float default_eps = 1e-4;
 
 	/**
-	 * Default destructor
+	 * Default, random-value constructor.
 	 */
+	Vector() {
+		for (size_t i = 0; i < N; i++) {
+			(*this)[i] = 0;
+		}
+	}
+
 	~Vector() = default;
 
 	/**
@@ -34,8 +43,24 @@ public:
 	 */
 	template<typename ... T>
 	Vector(T ... args)
-	:
-	std::array<float, N> {{static_cast<float>(args)...}} {}
+		:
+		std::array<float, N> {{static_cast<float>(args)...}} {
+
+		static_assert(sizeof...(args) == N, "not all values supplied.");
+	}
+
+	/**
+	 * Equality test with given precision.
+	 */
+	bool equals(const Vector<N> &other, float eps=default_eps) {
+		for (size_t i = 0; i < N; i++) {
+			float diff = std::abs((*this)[i] - other[i]);
+			if (diff >= eps) {
+				return false;
+			}
+		}
+		return true;
+	}
 
 	/**
 	 * Vector addition with assignment
@@ -116,7 +141,7 @@ public:
 	/**
 	 * Dot product of two Vectors
 	 */
-	float dot_product(const Vector<N> &other) const {
+	float dot(const Vector<N> &other) const {
 		float res = 0;
 		for (size_t i = 0; i < N; i++) {
 			res += (*this)[i] * other[i];
@@ -128,7 +153,7 @@ public:
 	 * Euclidian norm aka length
 	 */
 	float norm() const {
-		return sqrtf((*this).dot_product(*this));
+		return std::sqrt(this->dot(*this));
 	}
 
 	/**
@@ -152,28 +177,25 @@ public:
 		);
 	}
 
-};
-
-/**
- * Scalar multiplication with swapped arguments
- */
-template<size_t N>
-Vector<N> operator *(float a, const Vector<N> &v) {
-	return v * a;
-}
-
-/**
- * Print to output stream using '<<'
- */
-template<size_t N>
-std::ostream &operator <<(std::ostream &o, const Vector<N> &v) {
-	o << "(";
-	for (size_t i = 0; i < N-1; i++) {
-		o << v[i] << ", ";
+	/**
+	 * Scalar multiplication with swapped arguments
+	 */
+	friend Vector<N> operator *(float a, const Vector<N> &v) {
+		return v * a;
 	}
-	o << v[N-1] << ")";
-	return o;
-}
+
+	/**
+	 * Print to output stream using '<<'
+	 */
+	friend std::ostream &operator <<(std::ostream &o, const Vector<N> &v) {
+		o << "(";
+		for (size_t i = 0; i < N-1; i++) {
+			o << v[i] << ", ";
+		}
+		o << v[N-1] << ")";
+		return o;
+	}
+};
 
 
 using Vector2 = Vector<2>;

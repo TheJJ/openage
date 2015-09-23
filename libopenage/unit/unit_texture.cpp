@@ -4,9 +4,9 @@
 #include <iostream>
 
 #include "../coord/phys3.h"
-#include "../crossplatform/math_constants.h"
 #include "../game_spec.h"
 #include "../texture.h"
+#include "../util/math_constants.h"
 #include "unit_texture.h"
 
 namespace openage {
