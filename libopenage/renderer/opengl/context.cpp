@@ -78,7 +78,7 @@ void Context::setup() {
 	log::log(MSG(dbg) << "Maximum supported texture units: "
 	         << caps.max_texture_slots);
 	if (caps.max_texture_slots < 2) {
-		throw Error(MSG(err) << "Your GPU has too less texture units: "
+		throw Error(MSG(err) << "Your GPU has too few texture units: "
 		            << caps.max_texture_slots);
 	}
 
