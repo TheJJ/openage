@@ -1,4 +1,4 @@
-// Copyright 2015-2015 the openage authors. See copying.md for legal info.
+// Copyright 2015-2016 the openage authors. See copying.md for legal info.
 
 #include "../../config.h"
 #if WITH_OPENGL
@@ -7,7 +7,6 @@
 
 #include <utility>
 #include <array>
-#include <cassert>
 
 #include <epoxy/gl.h>
 #include <SDL2/SDL.h>
@@ -43,8 +42,10 @@ void Context::prepare() {
 	int opengl_version_major = gl_versions[gl_versions.size() - 1].first;
 	int opengl_version_minor = gl_versions[gl_versions.size() - 1].second;
 
-	SDL_Window* test_window = SDL_CreateWindow("test", 0, 0, 0, 0, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN);
-	assert(test_window != nullptr);
+	SDL_Window *test_window = SDL_CreateWindow("test", 0, 0, 2, 2, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN);
+	if (test_window == nullptr) {
+		throw Error(MSG(err) << "Failed creating window for OpenGL context testing. SDL Error: " << SDL_GetError());
+	}
 	SDL_GLContext test_context;
 
 	// check each version for availability
@@ -75,9 +76,11 @@ void Context::prepare() {
 	}
 
 	test_context = SDL_GL_CreateContext(test_window);
-	assert(test_context != nullptr);
+	if (test_context == nullptr) {
+		throw Error(MSG(err) << "Failed to create OpenGL context which previously succeeded. This should not happen! SDL Error: " << SDL_GetError());
+	}
 
-	auto& cap = this->capability;
+	auto &cap = this->capability;
 
 	cap.type = this->type;
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &cap.max_texture_size);
@@ -113,7 +116,7 @@ void Context::create(SDL_Window *window) {
 
 void Context::setup() {
 	// TODO: context capability checking
-	auto& caps = this->capability;
+	auto &caps = this->capability;
 
 	// to quote the standard doc: 'The value gives a rough estimate of the
 	// largest texture that the GL can handle'
