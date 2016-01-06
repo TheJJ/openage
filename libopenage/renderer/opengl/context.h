@@ -104,6 +104,11 @@ protected:
 	 * SDL opengl context state.
 	 */
 	SDL_GLContext glcontext;
+
+    /**
+     * The capability of this context.
+     */
+    context_capability capability;
 };
 
 }}} // namespace openage::renderer

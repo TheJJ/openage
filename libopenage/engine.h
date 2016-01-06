@@ -17,7 +17,7 @@
 #include "handlers.h"
 #include "options.h"
 #include "input/input_manager.h"
-#include "renderer/text_renderer.h"
+#include "renderer/text.h"
 #include "util/dir.h"
 #include "util/externalprofiler.h"
 #include "util/fps.h"

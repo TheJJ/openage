@@ -10,7 +10,7 @@
 
 #include "config.h"
 #include "error/error.h"
-#include "font.h"
+#include "renderer/font/font.h"
 #include "game_main.h"
 #include "generator.h"
 #include "job/job_manager.h"
