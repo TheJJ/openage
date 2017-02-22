@@ -13,12 +13,10 @@ class SimpleContinuous : public SimpleType<_T> {
 	mutable tube_time_t offset;
 
 public:
-	void set_now(const tube_time_t &t) const override;
+	void set_now(const tube_time_t &t) override;
 
 	_T get() const override;
 	_T get(const tube_time_t &) const override;
-
-public:
 };
 
 template <typename _T>

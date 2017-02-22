@@ -1,15 +1,14 @@
 
 add_sources(libopenage
-	base.cpp
 	container_iterator.cpp
 	event.cpp
 	eventlist.cpp
 	filter_iterator.cpp
-	object.cpp
-	simple_continuous.cpp
-	simple_discrete.cpp
-	simple_type.cpp
-	tube.cpp
+	tube_continuous.cpp
+	tube_discrete.cpp
+	tube_type.cpp
+	tube_internal.cpp
+	types.cpp
 	unordered_map.cpp
 )
 

@@ -5,7 +5,6 @@
 
 #include "../simple_continuous.h"
 #include "../simple_discrete.h"
-#include "../object.h"
 #include "../../util/vector.h"
 
 namespace openage {
@@ -20,7 +19,7 @@ struct event {
 	event() : player(0), state(IDLE) {}
 };
 
-class PongPlayer : public tube::TubeObject {
+class PongPlayer {
 public:
 	PongPlayer() {
 		speed.set_drop(0, 1);
@@ -41,7 +40,7 @@ public:
 	int id;
 };
 
-class PongBall : public tube::TubeObject {
+class PongBall {
 public:
 	tube::SimpleDiscrete<util::Vector<2>> speed;
 	tube::SimpleContinuous<util::Vector<2>> position;

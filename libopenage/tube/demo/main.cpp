@@ -33,8 +33,9 @@ int demo() {
 		state.p2.size.set_drop(now, 4);
 
 		auto init_speed = util::Vector<2>(
-				((rand() % 2) * 2 - 1) * (0.1f + rand() % 4) / 70.f,
-				0.01f * (rand() % 100) / 70.f);
+			((rand() % 2) * 2 - 1) * (0.1f + rand() % 4) / 70.f,
+			0.01f * (rand() % 100) / 70.f
+		);
 
 		gui.draw(state, now); //update gui related parameters
 
