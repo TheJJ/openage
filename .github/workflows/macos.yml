@@ -38,7 +38,7 @@ jobs:
       - name: Install environment helpers
         run: brew install ccache
       - name: Install openage dependencies
-        run: brew install cmake python3 libepoxy freetype fontconfig harfbuzz opus opusfile qt6 libogg libpng toml11 eigen
+        run: brew install cmake python3 just libepoxy ninja freetype fontconfig harfbuzz opus opusfile qt6 libogg libpng toml11 eigen
       - name: Install nyan dependencies
         run: brew install flex make
       - name: Install LLVM
@@ -54,9 +54,9 @@ jobs:
         # run: ./configure --compiler=clang --mode=release --ccache --download-nyan
         run: ./configure --compiler="$(brew --prefix llvm)/bin/clang++" --mode=release --ccache --download-nyan
       - name: Build
-        run: make -j$(sysctl -n hw.logicalcpu) VERBOSE=1
+        run: just build
       - name: Test
-        run: make test
+        run: just test
       # keep the caches even when the build or tests fail: the work done so far
       # is exactly what the next run wants to reuse
       - name: Save ccache dir
